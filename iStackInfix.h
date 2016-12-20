@@ -5,6 +5,7 @@
  */
 #ifndef ISTACKINFIX_H
 #define ISTACKINFIX_H
+#include <stdio.h>
 #include <string>
 #include <stdlib.h>
 #include "iGenfuner.h"
