@@ -5,9 +5,11 @@ CONFIG -= qt
 
 SOURCES += main.cpp \
     iStackInfix.cpp \
-    iGenfuner.cpp
+    iGenfuner.cpp \
+    iRpn.cpp
 
 HEADERS += \
     iStackInfix.h \
-    iGenfuner.h
+    iGenfuner.h \
+    iRpn.h
 

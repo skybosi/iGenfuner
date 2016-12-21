@@ -21,7 +21,7 @@ namespace Utils {
 
 class iGenFuner
 {
-    friend class iStackInfix;
+    friend class iRpn;
     typedef double (*fun) (double &, double, double);
     class _funer
     {

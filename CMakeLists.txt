@@ -8,5 +8,5 @@ include_directories(.)
 # 并将名称保存到 DIR_SRCS 变量
 aux_source_directory(. DIR_SRCS)
 # 指定生成目标
-add_executable(iConsPer ${DIR_SRCS})
+add_executable(iGenfuner ${DIR_SRCS})
 
