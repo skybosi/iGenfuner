@@ -1,98 +1,197 @@
 #include "iGenfuner.h"
-#include "iStackInfix.h"
+#include "iRpn.h"
+
 namespace Imaginer{
 namespace Utils {
 iGenFuner::iGenFuner(char *expname):_x(0),_y(0),_curpos(0),_expname(expname)
 {
-    generater();
+    //generater();
 }
 
-void iGenFuner::generater()
+bool iGenFuner::generater()
 {
-    try
-    {
-        iStackInfix ist(_expname);
-        std::cout << ist.Parser() << std::endl;
-    }catch(FexpException& e)
-    {
-        std::cout << e.what() << std::endl;
-    }
-    /*
-    bool operate = false; //
-    bool pri = false;     //优先级
-    bool full = false;    //控制添加函数的标志
-    double number = 0;
-    bool isnum = false;
+    iRpn rpn(_expname);
+    if(! rpn.genRpn())
+        return false;
+    iStack<iRpn::RPNnode> result;
+    iStack<iRpn::RPNnode>* _operands = rpn.getOperands();
+    int size = _operands->size();
+    iRpn::RPNnode curnode;    
     char op = '\0';
-    char cur = '\0';
-    while (cur = next())
+    bool haveXY = false;
+    iRpn::RPNnode  loperand;
+    iRpn::RPNnode  roperand;
+    double  value = 0;
+    bool top_bottom = false;//flag to record a unkowns value is top(true) or bottom(false)
+    for(int i = 0;i <= size; ++i)
     {
-        if(isspace(cur))
-            continue;
-        switch(cur)
+        curnode = (*_operands)[i];
+        if(!curnode)//opearator
         {
-        case '0' ... '9':
-            number = number*10 + cur - '0';
-            continue;
-            break;
-        case 'x':case 'X':
-            if (!operate)
-                _opstream.push_back(_funer::_assign);
-            break;
-        case '+':case '-':
-        case '*':case '/':
-            operate = true;
-            op = cur;
-            continue;
-            break;
-        case '(':case ')':
-            if(cur == '(')
-                pri = true;
-            else
-                pri = false;
-            break;
-        }
-      }
-      */
-}
-/*
-            if(operate)
+            op = curnode;
+            if(rpn.isVariable(op))//未知数
             {
+                haveXY = true;
+                result.push(op);
+                if(!result.empty())
+                {
+                    top_bottom = true;
+                }
+            }else
+            {
+                if(result.size() < 1)
+                {
+                    std::cout << "expression invaild: " << op  <<
+                                 " need two operands" << std::endl;
+                    return false;
+                }
+                loperand = result.pop();
+                roperand = result.pop();
                 switch (op) {
                 case '+':
-                    _opstream.push_back(_funer::_add);
+                    if(haveXY)
+                    {
+                        if(top_bottom)
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        else
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        break;
+                    }
+                    result.push(loperand+roperand);
                     break;
                 case '-':
-                    _opstream.push_back(_funer::_sub);
+                    if(haveXY)
+                    {
+                        if(top_bottom)
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        else
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        break;
+                    }
+                    result.push(loperand-roperand);
                     break;
                 case '*':
-                    if(!pri)
-                        _opstream.push_back(_funer::_assign);
-                    else
-                        _opstream.push_back(_funer::_mut);
+                    if(haveXY)
+                    {
+                        if(top_bottom)
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        else
+                            _opstream.push(_funer(_funer::_add,loperand));
+
+                        break;
+                    }
+                    result.push(loperand*roperand);
                     break;
                 case '/':
-                    _opstream.push_back(_funer::_div);
+                    if(haveXY)
+                    {
+                        if(top_bottom)
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        else
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        break;
+                    }
+                    result.push(loperand/roperand);
+                    break;
+                case '^':
+                    if(haveXY)
+                    {
+                        if(top_bottom)
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        else
+                            _opstream.push(_funer(_funer::_add,loperand));
+                        break;
+                    }
+                    result.push(loperand^roperand);
                     break;
                 default:
                     break;
                 }
-                op = '\0';
-                operate = false;
             }
+        }
+        else//operand
+        {
+            result.push(curnode);
+            std::cout << curnode << "\n";
+        }
+    }
+    std::cout << result << std::endl;
+    //result.destroy();
+    return true;
+}
 
- */
+double   iGenFuner::generater(double x)
+{
+    iRpn rpn(_expname);
+    if(! rpn.genRpn())
+        return false;
+    iStack<iRpn::RPNnode> result;
+    iStack<iRpn::RPNnode>* _operands = rpn.getOperands();
+    int size = _operands->size();
+    iRpn::RPNnode curnode;
+    char op = '\0';
+    double  loperand = 0;
+    double  roperand = 0;
+    for(int i = 0;i <= size; ++i)
+    {
+        curnode = (*_operands)[i];
+        if(!curnode)//opearator
+        {
+            op = curnode;
+            if(rpn.isVariable(op))
+            {
+                result.push(x);
+                //std::cout << "unknowns nunber " << curnode << std::endl;
+            }
+            else
+            {
+                loperand = result.pop();
+                roperand = result.pop();
+                switch (op)
+                {
+                case '+':
+                    result.push(roperand+loperand);
+                    break;
+                case '-':
+                    result.push(roperand-loperand);
+                    break;
+                case '*':
+                    result.push(roperand*loperand);
+                    break;
+                case '/':
+                    result.push(roperand/loperand);
+                    break;
+                case '^':
+                    result.push(pow(roperand,loperand));
+                    break;
+                default:
+                    std::cout << "invalid operator" << std::endl;
+                    break;
+                }
+            }
+        }
+        else//operand
+        {
+            result.push(curnode);
+            //std::cout << curnode << "\n";
+        }
+    }
+    return result.top();
+}
 
 double iGenFuner::operator() (double x)
 {
+    return generater(x);
+    /*
     size_t i = 0;
     size_t opsize = _opstream.size();
-    while (i < opsize)
+    while (i <= opsize)
     {
         _opstream[i](_y, x,_opstream[i].value());
         i++;
     }
     return _y;
+    */
 }
 
 }//namespace Utils

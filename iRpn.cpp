@@ -5,7 +5,7 @@
 namespace Imaginer{
 namespace Utils {
 
-iRpn::iRpn(char* expname):_expnames(expname)
+iRpn::iRpn(char* expname):_expnames(expname),_curpos(0)
 {
     _operator = new iStack<char>;
     _operator->push('#');
@@ -14,8 +14,40 @@ iRpn::iRpn(char* expname):_expnames(expname)
 
 iRpn::~iRpn()
 {
-    (_operator) ? (delete _operator,_operator = NULL) : (_operator);
-    (_operands) ? (delete _operands,_operands = NULL) : (_operands);
+    //(_operator) ? (delete _operator,_operator = NULL) : (_operator);
+    if(_operator)
+    {
+        delete _operator;
+        _operator = NULL;
+    }
+    //(_operands) ? (delete _operands,_operands = NULL) : (_operands);
+    if(_operands)
+    {
+        delete _operands;
+        _operands = NULL;
+    }
+}
+void iRpn::upPRI(char& cursign,double& value)
+{
+    switch (cursign) {
+    case '+':
+        cursign = '*';
+        value = 2;
+        break;
+    case '-':
+        cursign = '+';//no use
+        value = 0;
+        break;
+    case '*':
+        cursign = '^';
+        value = 2;
+        break;
+    case '/':
+        cursign = '+';//no use
+        value = 1;
+    default:
+        break;
+    }
 }
 
 bool iRpn::cmpPRI(char cursign)
@@ -48,7 +80,7 @@ int iRpn::getPRI(char cursign)
     }
 }
 
-void iRpn::genRpn()
+bool iRpn::genRpn()
 {
     char cur = '\0';
     bool ispoint = false, isnum = false;
@@ -61,8 +93,10 @@ void iRpn::genRpn()
         case '.':
             if(ispoint)
             {
-                //throw FexpException("function expression invaild, mutil '.'");
-                std::cout << "function expression invaild, mutil '.'" << std::endl;
+                std::cout << "syntax error: at " << _curpos << " appear multi- . " << std::endl;
+                _operands->clear();
+                _operator->clear();
+                return false;
             }else{
                 ispoint = true;
                 expn = 0.1;
@@ -121,18 +155,29 @@ void iRpn::genRpn()
             _operands->push(cur);
             break;
         default:
+            std::cout << "syntax error: at " << _curpos << " appear invaild symbol" << std::endl;
+            _operands->clear();
+            _operator->clear();
+            return false;
             break;
         }
+    }
+    if(isnum)
+    {
+        _operands->push(number);
+        number = 0;
     }
     while(_operator->size() > 0)
     {
         _operands->push(_operator->pop());
     }
-    //std::cout << *_operands << std::endl;
+
+    std::cout << *_operands << std::endl;
     //std::cout << (_operands->reverse()) << std::endl;
+    return true;
 }
 
-void iRpn::Parser(iGenFuner& genfuner)
+void iRpn::Parser()
 {
     genRpn();
     //_operands->reverse();
@@ -149,8 +194,9 @@ void iRpn::Parser(iGenFuner& genfuner)
         //std::cout << curnode << "\n";
         if(!curnode)//opearator
         {
-            if(curnode == 'x')
+            if(isVariable(curnode))
             {
+                //result.push(curnode);
                 std::cout << "unknowns nunber " << curnode << std::endl;
             }
             else

@@ -14,7 +14,7 @@
 #include <iostream>
 #include <cmath>
 #include <string>
-#include <vector>
+#include "iStack.h"
 
 namespace Imaginer{
 namespace Utils {
@@ -22,42 +22,43 @@ namespace Utils {
 class iGenFuner
 {
     friend class iRpn;
-    typedef double (*fun) (double &, double, double);
+    typedef double (*Fun) (double &, double, double);
     class _funer
     {
     private:
-        fun    _fun;
+        Fun    _fun;
         double _value;
     public:
-        _funer(fun f):_fun(f),_value(0){}
-        _funer(fun f,double v):_fun(f),_value(v){}
+        _funer():_fun(NULL),_value(0){}
+        _funer(const Fun& f,double v = 0):_fun(f),_value(v){}
     public:
-        static inline double _assign(double &des, double num,double value)
+        static inline double _assign(double &y, double x,double value)
         {
-            return ((value) ? (des  = value) : (des  = num));
+            return (y += (x+value));
         }
-        static inline double _add(double &des, double num,double value)
+        static inline double _add(double &y, double x,double value)
         {
-            return ((value) ? (des += value) : (des += num));
+            return (y += (x+value));
         }
-        static inline double _sub(double &des, double num,double value)
+        static inline double _sub(double &y, double x,double value)
         {
-            return ((value) ? (des -= value) : (des -= num));
+            return (y += (x-value));
         }
-        static inline double _mut(double &des, double num,double value)
+        static inline double _mut(double &y, double x,double value)
         {
-            return ((value) ? (des *= value) : (des *= num));
+            return (y += (x*value));
         }
-        static inline double _div(double &des, double num,double value)
+        static inline double _div(double &y, double x,double value)
         {
-            return ((value) ? (des /= value) : (des /= num));
+            return (y += (x/value));
         }
-        static inline double _pow(double &des, double num,double value)
+        static inline double _pow(double &y, double x,double value)
         {
-            return (des += pow(num,value));
+            return (y += pow(x,value));
         }
-        inline const  double& value(){return _value;}
-        inline operator fun(){return _fun;} //very important
+        inline double value()const{return _value;}//get value
+        inline double& value(){return _value;}    //set value
+        inline operator Fun(){return _fun;} //very important,default type conversion(_funer->Fun)
     };
 private:
     double _x;
@@ -65,13 +66,16 @@ private:
     int    _curpos;
     //std::string _expname;
     char*  _expname;
-    std::vector <_funer> _opstream;
+    iStack<_funer> _opstream;
 public:
     iGenFuner(char *expname);
 private:
     inline char next(){return /*_expname[_curpos++]*/ *_expname++;}
     inline char prev(){return /*_expname[_curpos--]*/ *_expname--;}
-    void   generater();
+    inline void push(const Fun& fun){_opstream.push(fun);}
+    inline Fun  pop(){return _opstream.pop();}
+    bool   generater();
+    double generater(double x);
 public:
     double operator() (double x);
 };
