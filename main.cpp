@@ -45,10 +45,10 @@ double you(double x)
 
 int main()
 {
-    //iGenFuner gf("-1.2*3-3+3+sin(-x+4*3-3+(1+5))*cos(x+7)*6+(-5+1)");
+    iGenFuner gf("-1.2*3-3+3+sin(-x+4*3-3+(1+5))*cos(x+7)*6+(-5+1)");
     //iGenFuner gf("sin(-x+cos(cos(3+x)+6))+1+cos(-x)+3");
     //iGenFuner gf("sin(x+cos(x))/3+9");
-    iGenFuner gf("sin(-x+4*3-3+(1+5))");
+    //iGenFuner gf("sin(-x+4*3-3+cos(1+5))");
     std::cout << gf(6)<< std::endl;
     std::cout << gf(5)<< std::endl;
     /*

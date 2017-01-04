@@ -137,6 +137,7 @@ bool iRpn::genRpn()
     std::string funname;
     char funindex = '\0';
     int  havefun = 0;
+    int left_bracket = 0;
     while(cur = next())
     {
         if(isspace(cur))continue;
@@ -177,6 +178,7 @@ bool iRpn::genRpn()
             break;
         case '(':
             _operator->push(cur);
+            left_bracket++;
             break;
         case ')':
             while(_operator->top() != '(')
@@ -184,10 +186,11 @@ bool iRpn::genRpn()
                 _operands->push(_operator->pop());
             }
             _operator->pop();//丢弃')'对应的首个'('
-            if(havefun--)
+            if(left_bracket == havefun && havefun--)
             {
                 _operator->push('$');//Function parameter ending flag
             }
+            left_bracket--;
             break;
         case 'x':case 'X': case 'y':case 'Y':
             _operands->push(cur);
