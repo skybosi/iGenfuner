@@ -5,7 +5,7 @@ CONFIG -= qt
 
 SOURCES += main.cpp \
     iGenfuner.cpp \
-    iRpn.cpp
+    iRpn.cpp \
 
 HEADERS += \
     iGenfuner.h \

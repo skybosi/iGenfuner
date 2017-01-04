@@ -3,12 +3,48 @@
 
 namespace Imaginer{
 namespace Utils {
-iGenFuner::iGenFuner(char *expname):_x(0),_y(0),_curpos(0),_expname(expname)
+iGenFuner::iGenFuner(char *expname):_x(0),_y(0),_curpos(0),_expname(expname),_rpn(_expname)
 {
+    std::cout << _expname << std::endl;
+    if(! _rpn.genRpn())
+        return;
+    else
+        std::cout << "genrate RPN OK" << std::endl;
     //generater();
+    //gen();
 }
 
-bool iGenFuner::generater()
+iGenFuner::sysFun iGenFuner::user1 = NULL;
+
+iGenFuner::sysFun iGenFuner::user2 = NULL;
+
+iGenFuner::sysFun iGenFuner::_sysfun[] =
+{
+    /*cmath provide such math funtion:*/
+    self,   /*self(x)=x*/zero,    /*zero(x)=0*/ one,     /*one(x)=1*/  factorial,/*阶乘*/
+    acos,   /*反余弦*/    asin,   /*反正弦*/      atan,   /*反正切*/      ceil,   /*上取整*/
+    cos,    /*余弦*/      cosh,   /*双曲余弦*/    exp,    /*指数值*/      fabs,   /*绝对值*/
+    floor,  /*下取整*/    log,    /*对数*/        log10,  /*对数*/        sin,    /*正弦*/
+    sqrt,   /*开方*/      tan,    /*正切*/        user1,  /*自定义函数1*/  user2   /*自定义函数2*/
+};
+
+std::string       iGenFuner::_sysfunS[] =
+{
+    "self",   /*self(x)=x*/ "zero",   /*zero(x)=0*/ "one",     /*one(x)=1*/  "factorial",/*阶乘*/
+    "acos",   /*反余弦*/    "asin",   /*反正弦*/      "atan",   /*反正切*/      "ceil",   /*上取整*/
+    "cos",    /*余弦*/      "cosh",   /*双曲余弦*/    "exp",    /*指数值*/      "fabs",   /*绝对值*/
+    "floor",  /*下取整*/    "log",    /*对数*/        "log10",  /*对数*/        "sin",    /*正弦*/
+    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1"  /*自定义函数1*/  "user2"   /*自定义函数2*/
+};
+
+void   iGenFuner::gen()
+{
+    _opstream.push(_funer(_funer::_add,3));
+    _opstream.push(_funer(_funer::_mut,5));
+    _opstream.push(_funer(_funer::_pow,2));
+}
+
+bool   iGenFuner::generater()
 {
     iRpn rpn(_expname);
     if(! rpn.genRpn())
@@ -21,7 +57,6 @@ bool iGenFuner::generater()
     bool haveXY = false;
     iRpn::RPNnode  loperand;
     iRpn::RPNnode  roperand;
-    double  value = 0;
     bool top_bottom = false;//flag to record a unkowns value is top(true) or bottom(false)
     for(int i = 0;i <= size; ++i)
     {
@@ -120,52 +155,72 @@ bool iGenFuner::generater()
     return true;
 }
 
-double   iGenFuner::generater(double x)
+double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos)
 {
-    iRpn rpn(_expname);
-    if(! rpn.genRpn())
-        return false;
-    iStack<iRpn::RPNnode> result;
-    iStack<iRpn::RPNnode>* _operands = rpn.getOperands();
     int size = _operands->size();
+    if(curpos > size)
+        return 0;
     iRpn::RPNnode curnode;
     char op = '\0';
-    double  loperand = 0;
-    double  roperand = 0;
-    for(int i = 0;i <= size; ++i)
+    iRpn::RPNnode  loperand;
+    iRpn::RPNnode  roperand;
+    double r  = 0;
+    for(int& i = curpos;curnode != '$' && i <= size; ++i)
     {
         curnode = (*_operands)[i];
         if(!curnode)//opearator
         {
             op = curnode;
-            if(rpn.isVariable(op))
+            if(_rpn.isVariable(op))
             {
                 result.push(x);
                 //std::cout << "unknowns nunber " << curnode << std::endl;
             }
             else
             {
-                loperand = result.pop();
-                roperand = result.pop();
                 switch (op)
                 {
                 case '+':
-                    result.push(roperand+loperand);
+                    roperand = result.pop();
+                    loperand = result.pop();
+                    result.push(loperand+roperand);
+                    break;
+                case '_':
+                    result.push(-result.pop());
                     break;
                 case '-':
-                    result.push(roperand-loperand);
+                    roperand = result.pop();
+                    loperand = result.pop();
+                    result.push(loperand-roperand);
                     break;
                 case '*':
-                    result.push(roperand*loperand);
+                    roperand = result.pop();
+                    loperand = result.pop();
+                    result.push(loperand*roperand);
                     break;
                 case '/':
-                    result.push(roperand/loperand);
+                    roperand = result.pop();
+                    loperand = result.pop();
+                    result.push(loperand/roperand);
                     break;
                 case '^':
-                    result.push(pow(roperand,loperand));
+                    roperand = result.pop();
+                    loperand = result.pop();
+                    result.push(pow(loperand,roperand));
+                    break;
+                case -128 ... FUN_INDEX_RANGE://function index
+                    std::cout << "Function: " << _sysfunS[op+128] << std::endl;
+                    Parser(result,x,++i);
+                    r = result.pop();
+                    //r = _sysfun[op+128](x);
+                    result.push(_sysfun[op+128](r));
+                    i--;
+                    break;
+                case '!':
+                    result.push(factorial(result.pop()));
                     break;
                 default:
-                    std::cout << "invalid operator" << std::endl;
+                    std::cout << "invalid operator: " << op << std::endl;
                     break;
                 }
             }
@@ -179,8 +234,18 @@ double   iGenFuner::generater(double x)
     return result.top();
 }
 
+double iGenFuner::generater(double x)
+{
+    iStack<iRpn::RPNnode> result;
+    _operands = _rpn.getOperands();
+    int start = 0;
+    Parser(result,x,start);
+    return result.top();
+}
+
 double iGenFuner::operator() (double x)
 {
+    std::cout << ">>>>>>>>>>>>>>> calculate: " << x << std::endl;
     return generater(x);
     /*
     size_t i = 0;
@@ -189,9 +254,8 @@ double iGenFuner::operator() (double x)
     {
         _opstream[i](_y, x,_opstream[i].value());
         i++;
-    }
-    return _y;
-    */
+    }*/
+    return _y;   
 }
 
 }//namespace Utils

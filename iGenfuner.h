@@ -1,7 +1,7 @@
 /*
  *
- * This class is used to input the string function of the identification and analysis tools clase,
- * Which uses the class iStackInfix parser function, in order to obtain the expression corresponding to
+ * This class is used to input the string function of the identification and analysis tools class,
+ * Which uses the class iStack and iRpn parser function, in order to obtain the expression corresponding to
  * the operation stream;
  * And when you want to get the math function a ( X -> Y )
  * will use operation stream to change X to Y
@@ -12,8 +12,12 @@
 #define IGENFUNER_H
 
 #include <iostream>
+
 #include <cmath>
+#include <ctgmath>
+#include <vector>
 #include <string>
+#include "iRpn.h"
 #include "iStack.h"
 
 namespace Imaginer{
@@ -21,8 +25,12 @@ namespace Utils {
 
 class iGenFuner
 {
+#define FUNNUM  20
+#define FUN_INDEX_RANGE (-128+FUNNUM)
+public:
     friend class iRpn;
     typedef double (*Fun) (double &, double, double);
+    typedef double (*sysFun) (double x);
     class _funer
     {
     private:
@@ -42,15 +50,15 @@ class iGenFuner
         }
         static inline double _sub(double &y, double x,double value)
         {
-            return (y += (x-value));
+            return (y -= (x-value));
         }
         static inline double _mut(double &y, double x,double value)
         {
-            return (y += (x*value));
+            return (y *= (x*value));
         }
         static inline double _div(double &y, double x,double value)
         {
-            return (y += (x/value));
+            return (y /= (x/value));
         }
         static inline double _pow(double &y, double x,double value)
         {
@@ -64,19 +72,45 @@ private:
     double _x;
     double _y;
     int    _curpos;
-    //std::string _expname;
-    char*  _expname;
-    iStack<_funer> _opstream;
+    //std::string          _expname;
+    char*                  _expname;
+    iRpn                   _rpn;
+    iStack<_funer>         _opstream;
+    iStack<iRpn::RPNnode>* _operands;
+private:
+    static sysFun          _sysfun[];
+    static std::string     _sysfunS[];
+private:
+    static sysFun user1;
+    static sysFun user2;
+    inline static double self(double x){return x;}
+    inline static double zero(double x){return (x = 0.0);}
+    inline static double one(double  x){return (x = 1.0);}
+    static double factorial(double x)
+    {
+        double result = 1.0;
+        for (long i = 1; i <= long(x); ++i)
+        {
+            result = result * i;
+        }
+        return result;
+    }
 public:
     iGenFuner(char *expname);
 private:
     inline char next(){return /*_expname[_curpos++]*/ *_expname++;}
     inline char prev(){return /*_expname[_curpos--]*/ *_expname--;}
     inline void push(const Fun& fun){_opstream.push(fun);}
-    inline Fun  pop(){return _opstream.pop();}
+    void   gen();
     bool   generater();
     double generater(double x);
+    inline Fun  pop(){return _opstream.pop();}
+    double Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos);
 public:
+    void   bind1(sysFun you){ _sysfun[18] = user1 = you;}
+    void   bind2(sysFun you){ _sysfun[19] = user2 = you;}
+    sysFun& User1(){return _sysfun[18];}
+    sysFun& User2(){return _sysfun[19];}
     double operator() (double x);
 };
 }//namespace Utils
