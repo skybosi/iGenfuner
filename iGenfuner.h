@@ -1,4 +1,5 @@
 /*
+ * Imaginer-Generate-function-er =>(iGenfuner) : Function generator and parser
  *
  * This class is used to input the string function of the identification and analysis tools class,
  * Which uses the class iStack and iRpn parser function, in order to obtain the expression corresponding to
@@ -12,9 +13,7 @@
 #define IGENFUNER_H
 
 #include <iostream>
-
 #include <cmath>
-#include <ctgmath>
 #include <vector>
 #include <string>
 #include "iRpn.h"
@@ -71,6 +70,7 @@ public:
 private:
     double _x;
     double _y;
+    double _z;
     int    _curpos;
     //std::string          _expname;
     char*                  _expname;
@@ -96,22 +96,27 @@ private:
         return result;
     }
 public:
+    iGenFuner();
     iGenFuner(char *expname);
 private:
     inline char next(){return /*_expname[_curpos++]*/ *_expname++;}
     inline char prev(){return /*_expname[_curpos--]*/ *_expname--;}
     inline void push(const Fun& fun){_opstream.push(fun);}
+    inline void setExp(const std::string& expname){_expname = (char*)expname.c_str();}
     void   gen();
     bool   generater();
-    double generater(double x);
+    double generater(double x,double y = 0);
     inline Fun  pop(){return _opstream.pop();}
-    double Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos);
+    double Parser(iStack<iRpn::RPNnode>& result,int& curpos,double x,double y = 0);
 public:
+    bool   genRpn(const std::string& expname);
     void   bind1(sysFun you){ _sysfun[18] = user1 = you;}
     void   bind2(sysFun you){ _sysfun[19] = user2 = you;}
     sysFun& User1(){return _sysfun[18];}
     sysFun& User2(){return _sysfun[19];}
     double operator() (double x);
+    double operator() (double x,double y);
+    void   clear(){_rpn.clear();_operands->clear();}
 };
 }//namespace Utils
 }//namespace Imaginer

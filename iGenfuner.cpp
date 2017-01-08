@@ -3,9 +3,14 @@
 
 namespace Imaginer{
 namespace Utils {
-iGenFuner::iGenFuner(char *expname):_x(0),_y(0),_curpos(0),_expname(expname),_rpn(_expname)
+
+iGenFuner::iGenFuner():_x(0),_y(0),_z(0),_curpos(0),_expname(),_operands(NULL)
 {
-    std::cout << _expname << std::endl;
+}
+
+iGenFuner::iGenFuner(char *expname):_x(0),_y(0),_z(0),_curpos(0),_expname(expname),_rpn(_expname),_operands(NULL)
+{
+    std::cout << "expression:" << _expname << std::endl;
     if(! _rpn.genRpn())
         return;
     else
@@ -34,7 +39,7 @@ std::string       iGenFuner::_sysfunS[] =
     "acos",   /*反余弦*/    "asin",   /*反正弦*/      "atan",   /*反正切*/      "ceil",   /*上取整*/
     "cos",    /*余弦*/      "cosh",   /*双曲余弦*/    "exp",    /*指数值*/      "fabs",   /*绝对值*/
     "floor",  /*下取整*/    "log",    /*对数*/        "log10",  /*对数*/        "sin",    /*正弦*/
-    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1"  /*自定义函数1*/  "user2"   /*自定义函数2*/
+    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1",  /*自定义函数1*/  "user2"   /*自定义函数2*/
 };
 
 void   iGenFuner::gen()
@@ -155,7 +160,7 @@ bool   iGenFuner::generater()
     return true;
 }
 
-double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos)
+double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,int& curpos,double x,double y)
 {
     int size = _operands->size();
     if(curpos > size)
@@ -173,7 +178,16 @@ double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos)
             op = curnode;
             if(_rpn.isVariable(op))
             {
-                result.push(x);
+                switch (op) {
+                case 'x':case 'X':
+                    result.push(x);
+                    break;
+                case 'y':case 'Y':
+                    result.push(x);
+                    break;
+                default:
+                    break;
+                }
                 //std::cout << "unknowns nunber " << curnode << std::endl;
             }
             else
@@ -209,8 +223,8 @@ double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos)
                     result.push(pow(loperand,roperand));
                     break;
                 case -128 ... FUN_INDEX_RANGE://function index
-                    std::cout << "Function: " << _sysfunS[op+128] << std::endl;
-                    Parser(result,x,++i);
+                    //std::cout << "Function: " << _sysfunS[op+128] << std::endl;
+                    Parser(result,++i,x,y);
                     r = result.pop();
                     //r = _sysfun[op+128](x);
                     result.push(_sysfun[op+128](r));
@@ -220,7 +234,7 @@ double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos)
                     result.push(factorial(result.pop()));
                     break;
                 default:
-                    std::cout << "invalid operator: " << op << std::endl;
+                    //std::cout << "invalid operator: " << op << std::endl;
                     break;
                 }
             }
@@ -234,19 +248,37 @@ double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,double x,int& curpos)
     return result.top();
 }
 
-double iGenFuner::generater(double x)
+double iGenFuner::generater(double x,double y)
 {
     iStack<iRpn::RPNnode> result;
     _operands = _rpn.getOperands();
     int start = 0;
-    Parser(result,x,start);
+    Parser(result,start,x,y);
+    //std::cout << "result: " << result << std::endl;
     return result.top();
+}
+
+bool   iGenFuner::genRpn(const std::string& expname){
+    setExp(expname);
+    _rpn.setExp(expname);
+//    if(_operands->empty())
+//    {
+//        return true;
+//    }
+    std::cout << "expression: " << _expname << std::endl;
+    if(! _rpn.genRpn())
+    {
+        std::cout << "genrate RPN FAIRED!!!" << std::endl;
+        return false;
+    }
+    //else
+    //    std::cout << "genrate RPN OK" << std::endl;
+    return true;
 }
 
 double iGenFuner::operator() (double x)
 {
-    std::cout << ">>>>>>>>>>>>>>> calculate: " << x << std::endl;
-    return generater(x);
+    _y = generater(x);
     /*
     size_t i = 0;
     size_t opsize = _opstream.size();
@@ -255,8 +287,23 @@ double iGenFuner::operator() (double x)
         _opstream[i](_y, x,_opstream[i].value());
         i++;
     }*/
+    //std::cout << ">>>>>>>>>>>>>>> calculate: " << x << " result: " << _y <<  std::endl;
     return _y;   
 }
 
+double iGenFuner::operator() (double x,double y)
+{
+    _z = generater(x,y);
+    /*
+    size_t i = 0;
+    size_t opsize = _opstream.size();
+    while (i <= opsize)
+    {
+        _opstream[i](_y, x,_opstream[i].value());
+        i++;
+    }*/
+    //std::cout << ">>>>>>>>>>>>>>> calculate: " << x << " result: " << _y <<  std::endl;
+    return _z;
+}
 }//namespace Utils
 }//namespace Imaginer

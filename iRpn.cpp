@@ -5,6 +5,13 @@
 namespace Imaginer{
 namespace Utils {
 
+iRpn::iRpn():_expnames(NULL),_curpos(0)
+{
+    _operator = new iStack<char>;
+    _operator->push('#');
+    _operands = new iStack<RPNnode>;
+}
+
 iRpn::iRpn(char* expname):_expnames(expname),_curpos(0)
 {
     _operator = new iStack<char>;
@@ -34,7 +41,7 @@ std::string   iRpn::_sysfunS[] =
     "acos",   /*反余弦*/    "asin",   /*反正弦*/      "atan",   /*反正切*/      "ceil",   /*上取整*/
     "cos",    /*余弦*/      "cosh",   /*双曲余弦*/    "exp",    /*指数值*/      "fabs",   /*绝对值*/
     "floor",  /*下取整*/    "log",    /*对数*/        "log10",  /*对数*/        "sin",    /*正弦*/
-    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1"  /*自定义函数1*/  "user2"   /*自定义函数2*/
+    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1",  /*自定义函数1*/  "user2"   /*自定义函数2*/
 };
 
 bool iRpn::_btPri[][8] =  //big pri
@@ -76,6 +83,7 @@ int  iRpn::PRI(char sign)
     case '(':  return 7;
     default :  break;
     }
+    return -1;
 }
 
 void iRpn::upPRI(char& cursign,double& value)
@@ -132,13 +140,19 @@ int  iRpn::getPRI(char cursign)
 
 bool iRpn::genRpn()
 {
+    if(!_expnames)
+    {
+        std::cout << "expression is empty" << std::endl;
+        std::cout << "You can use setExp set a function expression!" << std::endl;
+        return false;
+    }
     char cur = '\0';
     std::string snumber;
     std::string funname;
     char funindex = '\0';
     int  havefun = 0;
     int left_bracket = 0;
-    while(cur = next())
+    while((cur = next()))
     {
         if(isspace(cur))continue;
         switch (cur)
@@ -150,30 +164,44 @@ bool iRpn::genRpn()
             snumber = "";
             prev();
             break;
-        case '+':case '-':
-        case '*':case '/':
-        case '^':case '!':
-            if(cur == '-' && ( operater(_operands->top()) ||
-                               isFun(_operands->top())    ||
-                               _operands->empty()))//处理负号(-)
+        case '-':
+            cur = prev();
+            cur = prev();
+            //从右往左遍历，遇到"-"时再判断它的前一个符，如果是数字或者右括号，那么它就是减号！
+            if(!digit(cur) && cur != ')')
             {
                 //std::cout << "_operands: " <<  *_operands << std::endl;
                 _operator->push('_');
+                cur = next();
+                cur = next();
+                break;
+            }
+            cur = next();
+            cur = next();
+            /*
+            if(operater(_operands->top()) ||
+                    isFun(_operands->top())    ||
+                    _operands->empty())//处理负号(-)
+            {
+                //std::cout << "_operands: " <<  *_operands << std::endl;
+                _operator->push('_');
+                break;
+            }
+            */
+        case '+':
+        case '*':case '/':
+        case '^':case '!':
+            if(cmpPRI(cur))// PRI(cur) > PRI(topsign)
+            {
+                _operator->push(cur);
             }
             else
             {
-                if(cmpPRI(cur))// PRI(cur) > PRI(topsign)
+                while(!cmpPRI(cur))
                 {
-                    _operator->push(cur);
+                    _operands->push(_operator->pop());
                 }
-                else
-                {
-                    while(!cmpPRI(cur))
-                    {
-                        _operands->push(_operator->pop());
-                    }
-                    _operator->push(cur);
-                }
+                _operator->push(cur);
             }
             break;
         case '(':
@@ -226,7 +254,7 @@ bool iRpn::genRpn()
 void iRpn::cut()
 {
     iStack<RPNnode> result;
-    iStack<iStack<RPNnode>> funList;
+    iStack< iStack<RPNnode> > funList;
     int size = _operands->size();
     int i = 0;
     int flag = 0;
@@ -257,7 +285,6 @@ void iRpn::Parser()
     char op = '\0';
     RPNnode  loperand;
     RPNnode  roperand;
-    char    last_op = '\0';
     for(int i = 0;i <= size;++i)
     {
         curnode = (*_operands)[i];
@@ -282,7 +309,6 @@ void iRpn::Parser()
                         break;
                     }
                 }
-                last_op = op;
                 if(result.empty() || result.size() < 1)
                 {
                     continue;
@@ -351,6 +377,7 @@ char   iRpn::getFun(std::string funname)
 {
     char index = -1;
     while(++index < FUNNUM && funname != _sysfunS[index]);
+    //    std::cout << _sysfunS[index] << std::endl;
     return (index - 128);
 }
 

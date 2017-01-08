@@ -22,13 +22,12 @@ Imaginer-Generate-function-er =>(iGenfuner)  : Function generator and parser
     - ===============> calculate: 5  result: 8.7196
 
 ## NOTE
+At The Example:
 
-    At Example:
-
-    RPN  expression have this letter:
-    
-    ?   function's index,because the index is < 0,so std::cout will show ?
-    _   minus; minus sign; negative indication; negative sign;
+RPN  expression have this letter:
+- ? : function's index,because the index is < 0,so std::cout will show ?
+- _ : minus; minus sign; negative indication; negative sign;
+- $ : The end flag of the math function's arguments;
 
 ## Function
 
@@ -51,34 +50,44 @@ std::string       iGenFuner::_sysfunS[] =
     "acos",   /*反余弦*/    "asin",   /*反正弦*/      "atan",   /*反正切*/      "ceil",   /*上取整*/
     "cos",    /*余弦*/      "cosh",   /*双曲余弦*/    "exp",    /*指数值*/      "fabs",   /*绝对值*/
     "floor",  /*下取整*/    "log",    /*对数*/        "log10",  /*对数*/        "sin",    /*正弦*/
-    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1"  /*自定义函数1*/  "user2"   /*自定义函数2*/
+    "sqrt",   /*开方*/      "tan",    /*正切*/        "user1",  /*自定义函数1*/  "user2"   /*自定义函数2*/
 };
 ```
 
-- bind function method:
+- bind function usage:
+
+    - `user1` & `user2` is Custom math function,you can set you want math function,but you need bind at first
+Here is a example or usge;
+
+    - NOTE:
+    Here is just provide two entry:`user1` & `user2` ,you just bind with `bind1` to `user1`; `bind2` to `user2`.
+You can get `user1` with `User1`,`user2` with `User2`. 
+        - bind1 ： bind a function with user1;
+        - bind2 ： bind a function with user2;
+        - User1 ： get the user1 function you set;
+        - User2 ： get the user2 function you set;
+
 
 ```c++
+//A example you Custom math function's implement
 double you(double x)
 {
     return cos(x)+5;
 }
-
-iGenFuner gf("sin(x+cos(x))/3+9");
-gf.bind1(you);
-std::cout <<  gf.User1()(4) << std::endl;
+//======at main========
+iGenFuner gf;
+gf.bind1(you);                //bind you function with function point
+gf.setExp("sin(x)+user1(x)"); //set expression for parser and generator
+std::cout << "cos(4)+5: " << gf.User1()(4) << std::endl;
+std::cout << "sin(4)+user1(4) = sin(4)+cos(4)+5: " << gf(4) << std::endl;
 ```
+- Here bind example with calculate cos(4)+5, and retuen result;
 
-- bind1 with bind a function with user1;
-- bind2 with bind a function with user2;
-- User1 will get the user1 function you set;
-- User2 will get the user2 function you set;
-
-Here bind example with calculate cos(4)+5, and retuen result;
-
-- `The function's index is get from here code to get:`
+## Function index
+- `The function's index is get from here code :`
 
 ```c++
-#define FUNNUM  20
+#define FUNNUM  20   //this is number of sysFun,now(2017-1-8 10:00),It's 20
 #define FUN_INDEX_RANGE (-128+FUNNUM)
 
 char   iRpn::getFun(std::string funname)

@@ -5,7 +5,7 @@
  */
 #ifndef ISTACK
 #define ISTACK
-
+#include <string.h>
 namespace Imaginer{
 namespace Utils {
 
@@ -47,7 +47,7 @@ public:
     inline bool  empty(){ return (_top == -1);}
     inline bool  full() { return (_top == _size);}
     inline int   size() {return _top;}
-    inline void  clear(){_top = -1;}
+    inline void  clear(){/*memset(_data,0,1024);*/_top = -1;}
     inline void  destroy() {_top = -1,delete[] _data,_data = NULL;}
     inline bool  swap(int first,int second)
     {

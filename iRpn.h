@@ -7,6 +7,7 @@
 #ifndef IRPN_H
 #define IRPN_H
 #include <iostream>
+#include <stdlib.h>
 #include "iStack.h"
 
 namespace Imaginer{
@@ -74,14 +75,16 @@ private:
     int  getPRI(char cursign);   //get a operator's PRI from operator PRI table
     bool cmpPRI(char cursign);   //compare current operator sign with top operator,bigger-equal return true,else false
     void upPRI(char& cursign,double& value); //update the operator
-    inline char next(){_curpos++;return *_expnames++;}
-    inline char prev(){_curpos--;return *_expnames--;}
+    inline char next(){return (_expnames[_curpos++]);}
+    inline char prev(){return (_expnames[--_curpos]);}
     inline bool operater(char c);
     inline bool digit(char c);
     void cut();
 public:
+    iRpn();
     iRpn(char* expname);
     ~iRpn();
+    inline void setExp(const std::string& expnames){_expnames = (char*)expnames.c_str();}
     bool genRpn();               //generate a expression from the infix expression to suffix expression(RPN)
     void Parser();               //Parser a infix expression to a operator stream
     inline iStack< char >*  getOperator(){ return _operator;}
@@ -89,6 +92,12 @@ public:
     inline bool isVariable(const char& sign){return (sign == 'x' || sign == 'y' || sign == 'X' || sign == 'Y');}
     inline bool isFun(const char& sign){return (sign <= FUN_INDEX_RANGE);}//_sysFun's number - 1 - 128
     char   getFun(std::string funname);
+    inline void   clear(){
+        _expnames = NULL;
+        _curpos = 0;
+        _operator->clear();
+        _operands->clear();
+    }
 };
 
 }//namespace Utils
