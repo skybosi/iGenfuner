@@ -173,24 +173,32 @@ double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,int& curpos,double x,doub
     for(int& i = curpos;curnode != '$' && i <= size; ++i)
     {
         curnode = (*_operands)[i];
-        if(!curnode)//opearator
+        if(!curnode)//opearator || unknowns nunber(x;y) || function index
         {
             op = curnode;
-            if(_rpn.isVariable(op))
+            if(_rpn.isFun(op))//case -128 ... FUN_INDEX_RANGE://function index
             {
-                switch (op) {
+                //std::cout << "Function: " << _sysfunS[op+128] << std::endl;
+                Parser(result,++i,x,y);
+                r = result.pop();
+                //r = _sysfun[op+128](x);
+                result.push(_sysfun[op+128](r));
+                i--;
+            }else if(_rpn.isVariable(op))
+            {
+                //std::cout << "unknowns nunber " << curnode << std::endl;
+                switch (op)
+                {
                 case 'x':case 'X':
                     result.push(x);
                     break;
                 case 'y':case 'Y':
-                    result.push(x);
+                    result.push(y);
                     break;
                 default:
                     break;
                 }
-                //std::cout << "unknowns nunber " << curnode << std::endl;
-            }
-            else
+            }else
             {
                 switch (op)
                 {
@@ -221,14 +229,6 @@ double iGenFuner::Parser(iStack<iRpn::RPNnode>& result,int& curpos,double x,doub
                     roperand = result.pop();
                     loperand = result.pop();
                     result.push(pow(loperand,roperand));
-                    break;
-                case -128 ... FUN_INDEX_RANGE://function index
-                    //std::cout << "Function: " << _sysfunS[op+128] << std::endl;
-                    Parser(result,++i,x,y);
-                    r = result.pop();
-                    //r = _sysfun[op+128](x);
-                    result.push(_sysfun[op+128](r));
-                    i--;
                     break;
                 case '!':
                     result.push(factorial(result.pop()));

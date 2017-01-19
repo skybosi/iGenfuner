@@ -118,6 +118,10 @@ bool iRpn::cmpPRI(char cursign)
 
 int  iRpn::getPRI(char cursign)
 {
+    if( cursign >= -128 && cursign <= FUN_INDEX_RANGE)
+    {
+        return 4;
+    }
     switch (cursign) {
     case '#':case '(':
         return -1;
@@ -129,7 +133,7 @@ int  iRpn::getPRI(char cursign)
         return 2;
     case ')':
         return 3;
-    case -128 ... FUN_INDEX_RANGE://function index
+    //case -128 ... FUN_INDEX_RANGE://function index
     case '$': //函数的参数结束标志
     case '_': //负数
         return 4;
@@ -155,8 +159,18 @@ bool iRpn::genRpn()
     while((cur = next()))
     {
         if(isspace(cur))continue;
+        if(digit(cur))
+        {
+            snumber += cur;
+            while(!operater(cur = next()) && cur != '\0'){snumber += cur;}
+            _operands->push(atof(snumber.c_str()));
+            snumber = "";
+            prev();
+            continue;
+        }
         switch (cur)
         {
+        /*
         case '0' ... '9':
             snumber += cur;
             while(!operater(cur = next()) && cur != '\0'){snumber += cur;}
@@ -164,6 +178,7 @@ bool iRpn::genRpn()
             snumber = "";
             prev();
             break;
+        */
         case '-':
             cur = prev();
             cur = prev();
