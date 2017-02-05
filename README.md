@@ -67,7 +67,8 @@ You can get `user1` with `User1`,`user2` with `User2`.
         - User1 ： get the user1 function you set;
         - User2 ： get the user2 function you set;
 
-
+- Add [js version Genfuner](https://github.com/skybosi/wx-Canvas/tree/master/lib) for [wx-Canvas](https://github.com/skybosi/wx-Canvas),Just want to use at WeChat-small-program 
+    - NOTE:The [binduser](https://github.com/skybosi/iGenfuner/blob/master/README.md#function) function is missing
 ```c++
 //A example you Custom math function's implement
 double you(double x)
